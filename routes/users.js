@@ -27,7 +27,7 @@ router.get('/test', (req, res, next) => {
     console.log(req.cookies);
     res.cookie('token', 'abcd123', {
         httpOnly: true,
-        secure: false
+        secure: true
     });
     res.json({
         message: 'test'
@@ -53,10 +53,9 @@ router.post('/login', function(req, res, next) {
             console.error(err);
             return res.status(500).json(req.body);
         }
-        res.cookie('token', token, {
+        res.cookie('jwt', token, {
             httpOnly: true,
-            secure: true,
-            withCredentials: true
+            secure: true
         });
         res.json({
             message: "ok"
