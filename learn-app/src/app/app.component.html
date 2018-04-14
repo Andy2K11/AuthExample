@@ -1,0 +1,24 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div style="text-align:center">
+  <h1>
+    Welcome to {{ title }}!
+  </h1>
+  <h2>{{ username }}</h2>
+</div>
+<form #form="ngForm" (ngSubmit)="onSubmit(form)">
+    <label for="username">Username</label>
+    <input type="text" name="username" ngModel>
+    <label for="email">Email</label>
+    <input type="text" name="email" ngModel>
+    <label for="password">Password</label>
+    <input type="password" name="password" ngModel>
+    <button type="submit">Submit</button>
+</form>
+
+<form (ngSubmit)="onTest()">
+    <button type="submit">Test</button>
+</form>
+<form (ngSubmit)="onAdmin()">
+    <button type="submit">Admin</button>
+</form>
+<router-outlet></router-outlet>
