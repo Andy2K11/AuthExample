@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const unique = require('mongoose-unique-validator');
+const bcrypt = require('bcrypt');
 
 const schema = new Schema({
     username: {
@@ -13,7 +14,14 @@ const schema = new Schema({
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        set: pwd => bcrypt.hashSync(pwd, 15)
+    },
+    level: {
+        type: String,
+        default: 'guest',
+        required: true,
+        enum: ['guest', 'admin']
     }
 });
 

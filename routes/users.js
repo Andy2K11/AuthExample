@@ -3,11 +3,12 @@ var router = express.Router();
 const passport = require('passport');
 require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const fs = require('fs');
 
-/* GET users listing. */
-// router.get('/', (req, res, next) => {
-//   res.send('respond with a resource');
-// });
+const User = require('../models/User');
+const csrf = require('../middleware/csrf');
 
 router.get('/', passport.authenticate('jwt', { session: false} ), (req, res, next) => {
     if (req.user !== 'guest') {
@@ -20,46 +21,96 @@ router.get('/admin', passport.authenticate('jwt', { session: false} ), (req, res
     if (req.user !== 'admin') {
         return res.status(401).send('Access level denied');
     }
-    res.send('respond with admin resource');
+    res.json({
+        message: 'respond with admin resource',
+        access: req.user
+    });
 });
 
-router.get('/test', (req, res, next) => {
-    console.log(req.cookies);
-    res.cookie('token', 'abcd123', {
-        httpOnly: true,
-        secure: true
-    });
+router.post('/test', csrf, passport.authenticate('jwt', { session: false} ), (req, res, next) => {
     res.json({
-        message: 'test'
+        message: 'test successful'
+    });
+});
+
+router.post('/register', (req, res, next) => {
+    const email = req.body.email;
+    const password = req.body.password;
+    const user = new User({
+        username: req.body.username,
+        email: req.body.email,
+        password: req.body.password,
+        level: req.body.level
+    });
+    user.save((err, result) => {
+        if (err) {
+            return res.json({
+                error: err.message
+            });
+        }
+        return res.json({
+            message: "ok"
+        });
     });
 });
 
 router.post('/login', function(req, res, next) {
-    const payload = {
-        sub: {
-            email: req.body.email,
-            access: 'guest'
-        }
-    };
-    const secret = "secret";    // make it secure and not stored in codebase, e.g. pulled in from pem key
+    const email = req.body.email;
+    const password = req.body.password;
+    const secret = fs.readFileSync('keys/ec');
     const opts = {
-        expiresIn: 2 * 60 * 60,
+        expiresIn: 2 * 60,
         issuer: 'jwt.example.com',
-        audience: 'localhost'
+        audience: 'localhost',
+        algorithm: 'ES512'
     };      // expires in 2 hours, all fields are validated by passport-jwt
 
-    jwt.sign(payload, secret, opts, (err, token) => {
+    User.findOne({email}, (err, result) => {
         if (err) {
-            console.error(err);
-            return res.status(500).json(req.body);
+            return res.status(500).json({
+                error: err
+            });
         }
-        res.cookie('jwt', token, {
-            httpOnly: true,
-            secure: true
-        });
-        res.json({
-            message: "ok"
-        });
+        if (!result) {
+            return res.status(401).json({
+                error: 'Invalid username or password'
+            });
+        }
+        bcrypt.compare(password, result.password).then(success => {
+            if (!success) {
+                return res.status(401).json({
+                    error: 'Invalid username or password'
+                });
+            }
+            const payload = {
+                sub: {
+                    username: result.username,
+                    access: result.level
+                }
+            };
+            jwt.sign(payload, secret, opts, (err, token) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json(req.body);
+                }
+                res.cookie('XSRF-TOKEN', crypto.randomBytes(64).toString('hex'), {
+                    httpOnly: false,
+                    maxAge: 20 * 1000,
+                    secure: true,
+                    sameSite: true
+                });
+                res.cookie('jwt', token, {
+                    httpOnly: true,
+                    maxAge: opts.expiresIn * 1000,
+                    secure: true,
+                    sameSite: true
+                });
+                res.json({
+                    message: "ok",
+                    username: result.username
+                });
+            });
+        }).catch(err => res.status(500).json({error: err.message}));
     });
 });
 

@@ -36,11 +36,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://localhost:4200');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type');
+    res.setHeader('Access-Control-Allow-Origin', 'https://localhost:4200');         // allow from the dev server
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, X-XSRF-TOKEN');
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Max-Age', '3600');
+    res.setHeader('Content-Security-Policy', 'default-src \'none\';');
     next();
 });
 
