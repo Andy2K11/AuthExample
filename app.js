@@ -20,6 +20,13 @@ mongoose.connect(mongoUri)
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
+app.use((req, res, next) => {
+    if (req.secure) {
+        return next();
+    }
+    const host = req.headers.host.split(':');
+    res.redirect(`https://${host[0]}:${app.get('port')}/${req.url}`);
+});
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
@@ -36,7 +43,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://localhost:4200');         // allow from the dev server
+    res.setHeader('Access-Control-Allow-Origin', 'https://localhost');         // allow from the dev server
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, X-XSRF-TOKEN');
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Credentials', 'true');

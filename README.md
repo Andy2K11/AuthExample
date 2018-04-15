@@ -7,6 +7,7 @@ Use this switch with node to set the cipher suite
     -tls-cipher-list='ECDHE-ECDSA-AES256-SHA'
 
 ### OpenSSL key pairs (PKCS#1)
+
 To generate a elliptic curve file in pem format
 
     openssl ecparam -genkey -name secp521r1 -out ec.pem
@@ -60,4 +61,9 @@ You can now simply ssh to the server by
 
     ssh user@server
 
+### Set the port
 
+From the git bash shell on windows
+
+    export PORT=3000
+    echo $PORT

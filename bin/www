@@ -6,6 +6,7 @@
 
 var app = require('../app');
 var debug = require('debug')('mean:server');
+var http = require('http');
 var https = require('https');
 const fs = require('fs');
 
@@ -13,7 +14,7 @@ const fs = require('fs');
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
+var port = normalizePort(process.env.PORT || 3443);
 app.set('port', port);
 
 /**
@@ -25,6 +26,7 @@ const options = {
     cert: fs.readFileSync('keys/cert.pem')
 };
 
+http.createServer(app).listen(3080);
 const server = https.createServer(options, app);
 
 /**
